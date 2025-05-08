@@ -36,6 +36,7 @@ typedef struct {
 	gboolean wordwrap;
 	gboolean linenumbers;
 	gboolean autoindent;
+	gboolean maximize;
 } Conf;
 
 static void load_config_file(Conf *conf)
@@ -72,6 +73,8 @@ static void load_config_file(Conf *conf)
 			conf->linenumbers = atoi(buf);
 			fgets(buf, sizeof(buf), fp);
 			conf->autoindent = atoi(buf);
+			fgets(buf, sizeof(buf), fp);
+			conf->maximize = atoi(buf);
 		}
 		g_strfreev(num);
 	}
@@ -80,6 +83,7 @@ static void load_config_file(Conf *conf)
 
 void save_config_file(void)
 {
+#if ALLOW_SAVE_TO_CONFIG_FILE	
 	FILE *fp;
 	gchar *path;
 	GtkItemFactory *ifactory;
@@ -133,6 +137,7 @@ void save_config_file(void)
 	fclose(fp);
 	
 	g_free(fontname);
+#endif // ALLOW_SAVE_TO_CONFIG_FILE
 }
 
 #if !GLIB_CHECK_VERSION(2, 6, 0)
@@ -308,13 +313,15 @@ gint main(gint argc, gchar **argv)
 	conf->height      = 400;
 	conf->fontname    = g_strdup("Monospace 12");
 	conf->wordwrap    = FALSE;
-	conf->linenumbers = FALSE;
-	conf->autoindent  = FALSE;
+	conf->linenumbers = TRUE;
+	conf->autoindent  = TRUE;
+	conf->maximize    = FALSE;
 	
 	load_config_file(conf);
 	
-	gtk_window_set_default_size(
-		GTK_WINDOW(pub->mw->window), conf->width, conf->height);
+	gtk_window_set_default_size(GTK_WINDOW(pub->mw->window), conf->width, conf->height);
+	if ( conf->maximize ) gtk_window_maximize(GTK_WINDOW(pub->mw->window));	
+	
 	set_text_font_by_name(pub->mw->view, conf->fontname);
 	
 	ifactory = gtk_item_factory_from_widget(pub->mw->menubar);
